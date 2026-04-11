@@ -1,155 +1,98 @@
 from flask import Flask, request, redirect, session, render_template
 from models import db, Usuario, Lancamento
+from services import filtrar_lancamentos, calcular_totais, criar_lancamento, atualizar_lancamento
 import config
-from datetime import datetime
-
-app = Flask(__name__)
-app.config.from_object(config)
-
-db.init_app(app)
-
-# ==============================
-# FUNÇÕES DE NEGÓCIO
-# ==============================
-
-# Função para filtrar lançamentos por data
-def filtrar_lancamentos(user_id, data_inicio=None, data_fim=None):
-    query = Lancamento.query.filter_by(usuario_id=user_id)
-
-    if data_inicio:
-        query = query.filter(Lancamento.data >= data_inicio)
-
-    if data_fim:
-        query = query.filter(Lancamento.data <= data_fim)
-
-    return query.all()
-
-# Função para calcular totais de receitas, despesas e saldo
-def calcular_totais(lancamentos):
-    total_receitas = 0
-    total_despesas = 0
-
-    for l in lancamentos:
-        if l.status:
-            if l.tipo == "R":
-                total_receitas += l.valor
-            else:
-                total_despesas += l.valor
-
-    saldo = total_receitas - total_despesas
-
-    return total_receitas, total_despesas, saldo
-
-# Função para criar um novo lançamento
-def criar_lancamento(form, user_id):
-    data = form.get("data")
-    status = form.get("status")
-
-    return Lancamento(
-        descricao=form["descricao"],
-        valor=form["valor"],
-        tipo=form["tipo"],
-        usuario_id=user_id,
-        data=datetime.strptime(data, "%Y-%m-%d") if data else datetime.today(),
-        status=True if status == "on" else False
-    )
-
-# Função para atualizar um lançamento existente
-def atualizar_lancamento(lanc, form):
-    lanc.descricao = form["descricao"]
-    lanc.valor = form["valor"]
-    lanc.tipo = form["tipo"]
-
-    data = form.get("data")
-    status = form.get("status")
-
-    lanc.data = datetime.strptime(data, "%Y-%m-%d") if data else lanc.data
-    lanc.status = True if status == "on" else False
-
-    return lanc
 
 
-# ==============================
-# ROTAS
-# ==============================
+def create_app(test_config=None):
+    app = Flask(__name__)
 
-# Rota de Login
-@app.route("/", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        user = Usuario.query.filter_by(
-            login=request.form["login"],
-            senha=request.form["senha"]
-        ).first()
+    # Configuração de teste ou produção
+    if test_config:
+        app.config.update(test_config)
+    else:
+        app.config.from_object(config)
 
-        if user:
-            session["user_id"] = user.id
-            return redirect("/dashboard")
+    db.init_app(app)
 
-    return render_template("login.html")
+    # ==============================
+    # ROTAS
+    # ==============================
 
-# Rota do Dashboard
-@app.route("/dashboard")
-def dashboard():
-    if "user_id" not in session:
-        return redirect("/")
+    @app.route("/", methods=["GET", "POST"])
+    def login():
+        if request.method == "POST":
+            user = Usuario.query.filter_by(
+                login=request.form["login"],
+                senha=request.form["senha"]
+            ).first()
 
-    data_inicio = request.args.get("data_inicio")
-    data_fim = request.args.get("data_fim")
+            if user:
+                session["user_id"] = user.id
+                return redirect("/dashboard")
 
-    lancamentos = filtrar_lancamentos(
-        session["user_id"],
-        data_inicio,
-        data_fim
-    )
+        return render_template("login.html")
 
-    total_receitas, total_despesas, saldo = calcular_totais(lancamentos)
+    @app.route("/dashboard")
+    def dashboard():
+        if "user_id" not in session:
+            return redirect("/")
 
-    return render_template(
-        "dashboard.html",
-        lancamentos=lancamentos,
-        total_receitas=total_receitas,
-        total_despesas=total_despesas,
-        saldo=saldo
-    )
+        data_inicio = request.args.get("data_inicio")
+        data_fim = request.args.get("data_fim")
 
-# Rota para adicionar um novo lançamento
-@app.route("/add", methods=["POST"])
-def add():
-    if "user_id" not in session:
-        return redirect("/")
+        lancamentos = filtrar_lancamentos(
+            session["user_id"],
+            data_inicio,
+            data_fim
+        )
 
-    novo = criar_lancamento(request.form, session["user_id"])
+        total_receitas, total_despesas, saldo = calcular_totais(lancamentos)
 
-    db.session.add(novo)
-    db.session.commit()
+        return render_template(
+            "dashboard.html",
+            lancamentos=lancamentos,
+            total_receitas=total_receitas,
+            total_despesas=total_despesas,
+            saldo=saldo
+        )
 
-    return redirect("/dashboard")
+    @app.route("/add", methods=["POST"])
+    def add():
+        if "user_id" not in session:
+            return redirect("/")
 
-# Rota para deletar um lançamento
-@app.route("/delete/<int:id>")
-def delete(id):
-    lanc = db.session.get(Lancamento, id)
+        novo = criar_lancamento(request.form, session["user_id"])
 
-    if lanc:
-        db.session.delete(lanc)
+        db.session.add(novo)
         db.session.commit()
 
-    return redirect("/dashboard")
-
-# Rota para editar um lançamento
-@app.route("/edit/<int:id>", methods=["GET", "POST"])
-def edit(id):
-    lanc = db.session.get(Lancamento, id)
-
-    if request.method == "POST":
-        atualizar_lancamento(lanc, request.form)
-
-        db.session.commit()
         return redirect("/dashboard")
 
-    return render_template("edit.html", lanc=lanc)
+    @app.route("/delete/<int:id>")
+    def delete(id):
+        lanc = db.session.get(Lancamento, id)
 
+        if lanc:
+            db.session.delete(lanc)
+            db.session.commit()
+
+        return redirect("/dashboard")
+
+    @app.route("/edit/<int:id>", methods=["GET", "POST"])
+    def edit(id):
+        lanc = db.session.get(Lancamento, id)
+
+        if request.method == "POST":
+            atualizar_lancamento(lanc, request.form)
+
+            db.session.commit()
+            return redirect("/dashboard")
+
+        return render_template("edit.html", lanc=lanc)
+
+    return app
 
 if __name__ == "__main__":
+    app = create_app()
     app.run(host="0.0.0.0", port=5000)

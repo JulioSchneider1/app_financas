@@ -4,33 +4,21 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pytest
-from app import app
+from app import create_app
 from models import db, Usuario
 
-# Configuração do banco de dados para testes
+
+# ==============================
+# FIXTURE: CLIENT (requisições HTTP)
+# ==============================
 @pytest.fixture
 def client():
-    app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-
-    with app.test_client() as client:
-        with app.app_context():
-            db.create_all()
-
-            user = Usuario(nome="Admin", login="admin", senha="123")
-            db.session.add(user)
-            db.session.commit()
-
-        yield client
-
-        with app.app_context():
-            db.drop_all()
-
-# Configuração do contexto do aplicativo para testes
-@pytest.fixture
-def app_context():
-    app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    app = create_app({
+        "TESTING": True,
+        "SECRET_KEY": "test",
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False
+    })
 
     with app.app_context():
         db.create_all()
@@ -39,7 +27,33 @@ def app_context():
         db.session.add(user)
         db.session.commit()
 
-        yield
+        with app.test_client() as client:
+            yield client
+
+        db.session.remove()
+        db.drop_all()
+
+
+# ==============================
+# FIXTURE: APP CONTEXT (uso direto do banco)
+# ==============================
+@pytest.fixture
+def app_context():
+    app = create_app({
+        "TESTING": True,
+        "SECRET_KEY": "test",
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False
+    })
+
+    with app.app_context():
+        db.create_all()
+
+        user = Usuario(nome="Admin", login="admin", senha="123")
+        db.session.add(user)
+        db.session.commit()
+
+        yield app  # retorna o app caso precise
 
         db.session.remove()
         db.drop_all()

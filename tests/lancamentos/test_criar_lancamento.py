@@ -1,6 +1,5 @@
 # Teste para verificar a criação de um lançamento financeiro
 def test_criar_lancamento(client):
-    from models import db, Lancamento
 
     with client.session_transaction() as sess:
         sess["user_id"] = 1
