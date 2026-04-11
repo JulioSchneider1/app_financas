@@ -1,3 +1,4 @@
+# Testes para a rota de edição de postagens (GET)
 def test_edit_get(client):
     with client.session_transaction() as sess:
         sess["user_id"] = 1

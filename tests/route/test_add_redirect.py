@@ -1,3 +1,4 @@
+# Teste para verificar se a rota de adicionar redireciona corretamente após a adição de um registro.
 def test_add_redirect(client):
     with client.session_transaction() as sess:
         sess["user_id"] = 1

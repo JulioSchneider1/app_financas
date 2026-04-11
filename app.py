@@ -12,6 +12,7 @@ db.init_app(app)
 # FUNÇÕES DE NEGÓCIO
 # ==============================
 
+# Função para filtrar lançamentos por data
 def filtrar_lancamentos(user_id, data_inicio=None, data_fim=None):
     query = Lancamento.query.filter_by(usuario_id=user_id)
 
@@ -23,7 +24,7 @@ def filtrar_lancamentos(user_id, data_inicio=None, data_fim=None):
 
     return query.all()
 
-
+# Função para calcular totais de receitas, despesas e saldo
 def calcular_totais(lancamentos):
     total_receitas = 0
     total_despesas = 0
@@ -39,7 +40,7 @@ def calcular_totais(lancamentos):
 
     return total_receitas, total_despesas, saldo
 
-
+# Função para criar um novo lançamento
 def criar_lancamento(form, user_id):
     data = form.get("data")
     status = form.get("status")
@@ -53,7 +54,7 @@ def criar_lancamento(form, user_id):
         status=True if status == "on" else False
     )
 
-
+# Função para atualizar um lançamento existente
 def atualizar_lancamento(lanc, form):
     lanc.descricao = form["descricao"]
     lanc.valor = form["valor"]
@@ -72,6 +73,7 @@ def atualizar_lancamento(lanc, form):
 # ROTAS
 # ==============================
 
+# Rota de Login
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -86,7 +88,7 @@ def login():
 
     return render_template("login.html")
 
-
+# Rota do Dashboard
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
@@ -111,7 +113,7 @@ def dashboard():
         saldo=saldo
     )
 
-
+# Rota para adicionar um novo lançamento
 @app.route("/add", methods=["POST"])
 def add():
     if "user_id" not in session:
@@ -124,7 +126,7 @@ def add():
 
     return redirect("/dashboard")
 
-
+# Rota para deletar um lançamento
 @app.route("/delete/<int:id>")
 def delete(id):
     lanc = db.session.get(Lancamento, id)
@@ -135,7 +137,7 @@ def delete(id):
 
     return redirect("/dashboard")
 
-
+# Rota para editar um lançamento
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit(id):
     lanc = db.session.get(Lancamento, id)

@@ -1,3 +1,4 @@
+# Teste para verificar o comportamento do filtro de lançamentos quando não há resultados
 def test_filtro_sem_resultado(app_context):
     from app import filtrar_lancamentos, app
 

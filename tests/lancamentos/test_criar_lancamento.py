@@ -1,3 +1,4 @@
+# Teste para verificar a criação de um lançamento financeiro
 def test_criar_lancamento(client):
     from models import db, Lancamento
 

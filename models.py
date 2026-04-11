@@ -2,6 +2,9 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+# MODELOS
+
+# Tabela de usuários
 class Usuario(db.Model):
     __tablename__ = "usuarios"
     
@@ -10,7 +13,7 @@ class Usuario(db.Model):
     login = db.Column(db.String(50))
     senha = db.Column(db.String(50))
 
-
+# Tabela de lançamentos
 class Lancamento(db.Model):
     __tablename__ = "lancamentos"
 

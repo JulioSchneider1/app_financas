@@ -1,3 +1,4 @@
+# Teste para deletar um lançamento
 def test_deletar_lancamento(client):
     from models import db, Lancamento
 

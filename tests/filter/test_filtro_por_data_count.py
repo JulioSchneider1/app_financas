@@ -1,3 +1,4 @@
+# Teste para verificar a contagem de lançamentos filtrados por data
 def test_filtro_por_data_count(app_context):
     from app import filtrar_lancamentos, app
     from models import db, Lancamento

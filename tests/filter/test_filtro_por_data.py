@@ -1,3 +1,4 @@
+# Teste para verificar o filtro por data no dashboard (HTML)
 def test_filtro_por_data(client):
     from models import db, Lancamento
     from datetime import date

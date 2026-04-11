@@ -1,3 +1,4 @@
+# Teste para editar um lançamento
 def test_editar_lancamento(client):
     from models import db, Lancamento
 

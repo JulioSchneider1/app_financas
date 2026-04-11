@@ -7,6 +7,7 @@ import pytest
 from app import app
 from models import db, Usuario
 
+# Configuração do banco de dados para testes
 @pytest.fixture
 def client():
     app.config["TESTING"] = True
@@ -25,6 +26,7 @@ def client():
         with app.app_context():
             db.drop_all()
 
+# Configuração do contexto do aplicativo para testes
 @pytest.fixture
 def app_context():
     app.config["TESTING"] = True

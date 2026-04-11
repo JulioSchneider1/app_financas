@@ -1,3 +1,4 @@
+# Teste para o filtro de lançamentos somente a partir de uma data de início
 def test_filtro_somente_inicio(app_context):
     from app import filtrar_lancamentos, app
 
