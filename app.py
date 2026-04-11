@@ -1,11 +1,76 @@
 from flask import Flask, request, redirect, session, render_template
 from models import db, Usuario, Lancamento
 import config
+from datetime import datetime
 
 app = Flask(__name__)
 app.config.from_object(config)
 
 db.init_app(app)
+
+# ==============================
+# FUNÇÕES DE NEGÓCIO
+# ==============================
+
+def filtrar_lancamentos(user_id, data_inicio=None, data_fim=None):
+    query = Lancamento.query.filter_by(usuario_id=user_id)
+
+    if data_inicio:
+        query = query.filter(Lancamento.data >= data_inicio)
+
+    if data_fim:
+        query = query.filter(Lancamento.data <= data_fim)
+
+    return query.all()
+
+
+def calcular_totais(lancamentos):
+    total_receitas = 0
+    total_despesas = 0
+
+    for l in lancamentos:
+        if l.status:
+            if l.tipo == "R":
+                total_receitas += l.valor
+            else:
+                total_despesas += l.valor
+
+    saldo = total_receitas - total_despesas
+
+    return total_receitas, total_despesas, saldo
+
+
+def criar_lancamento(form, user_id):
+    data = form.get("data")
+    status = form.get("status")
+
+    return Lancamento(
+        descricao=form["descricao"],
+        valor=form["valor"],
+        tipo=form["tipo"],
+        usuario_id=user_id,
+        data=datetime.strptime(data, "%Y-%m-%d") if data else datetime.today(),
+        status=True if status == "on" else False
+    )
+
+
+def atualizar_lancamento(lanc, form):
+    lanc.descricao = form["descricao"]
+    lanc.valor = form["valor"]
+    lanc.tipo = form["tipo"]
+
+    data = form.get("data")
+    status = form.get("status")
+
+    lanc.data = datetime.strptime(data, "%Y-%m-%d") if data else lanc.data
+    lanc.status = True if status == "on" else False
+
+    return lanc
+
+
+# ==============================
+# ROTAS
+# ==============================
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -27,20 +92,16 @@ def dashboard():
     if "user_id" not in session:
         return redirect("/")
 
-    lancamentos = Lancamento.query.filter_by(
-        usuario_id=session["user_id"]
-    ).all()
+    data_inicio = request.args.get("data_inicio")
+    data_fim = request.args.get("data_fim")
 
-    total_receitas = 0
-    total_despesas = 0
+    lancamentos = filtrar_lancamentos(
+        session["user_id"],
+        data_inicio,
+        data_fim
+    )
 
-    for l in lancamentos:
-        if l.tipo == "R":
-            total_receitas += l.valor
-        else:
-            total_despesas += l.valor
-
-    saldo = total_receitas - total_despesas
+    total_receitas, total_despesas, saldo = calcular_totais(lancamentos)
 
     return render_template(
         "dashboard.html",
@@ -53,12 +114,10 @@ def dashboard():
 
 @app.route("/add", methods=["POST"])
 def add():
-    novo = Lancamento(
-        descricao=request.form["descricao"],
-        valor=request.form["valor"],
-        tipo=request.form["tipo"],
-        usuario_id=session["user_id"]
-    )
+    if "user_id" not in session:
+        return redirect("/")
+
+    novo = criar_lancamento(request.form, session["user_id"])
 
     db.session.add(novo)
     db.session.commit()
@@ -68,19 +127,21 @@ def add():
 
 @app.route("/delete/<int:id>")
 def delete(id):
-    lanc = Lancamento.query.get(id)
-    db.session.delete(lanc)
-    db.session.commit()
+    lanc = db.session.get(Lancamento, id)
+
+    if lanc:
+        db.session.delete(lanc)
+        db.session.commit()
+
     return redirect("/dashboard")
+
 
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit(id):
-    lanc = Lancamento.query.get(id)
+    lanc = db.session.get(Lancamento, id)
 
     if request.method == "POST":
-        lanc.descricao = request.form["descricao"]
-        lanc.valor = request.form["valor"]
-        lanc.tipo = request.form["tipo"]
+        atualizar_lancamento(lanc, request.form)
 
         db.session.commit()
         return redirect("/dashboard")
@@ -88,4 +149,5 @@ def edit(id):
     return render_template("edit.html", lanc=lanc)
 
 
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
