@@ -1,7 +1,7 @@
 # Teste para verificar a contagem de lançamentos filtrados por data
 def test_filtro_por_data_count(app_context):
-    from services import filtrar_lancamentos
-    from models import db, Lancamento
+    from app.services.services import filtrar_lancamentos
+    from app.models import db, Lancamento
     from datetime import date
 
     db.session.query(Lancamento).delete()

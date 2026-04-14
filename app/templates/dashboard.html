@@ -13,26 +13,57 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Controle Financeiro</h2>
   </div>
+
+  <!-- FILTRO -->
   <div class="card shadow mb-4">
     <div class="card-body">
       <form method="GET" action="/dashboard" class="row g-3 align-items-end">
 
         <div class="col-md-3">
           <label>Data início</label>
-          <input type="date" name="data_inicio" class="form-control">
+          <input type="date" name="data_inicio" class="form-control"
+                value="{{ request.args.get('data_inicio', '') }}">
         </div>
 
         <div class="col-md-3">
           <label>Data fim</label>
-          <input type="date" name="data_fim" class="form-control">
+          <input type="date" name="data_fim" class="form-control"
+                value="{{ request.args.get('data_fim', '') }}">
         </div>
 
+        <div class="col-md-2">
+          <label>Status</label>
+          <select name="status" class="form-select">
+            <option value="">Todos</option>
+            <option value="on" {% if request.args.get("status") == "on" %}selected{% endif %}>
+              Efetuado
+            </option>
+            <option value="off" {% if request.args.get("status") == "off" %}selected{% endif %}>
+              Pendente
+            </option>
+          </select>
+        </div>
+
+        <!-- BOTÕES -->
         <div class="col-md-2">
           <button class="btn btn-primary w-100">Filtrar</button>
         </div>
 
-        <div class="col-md-2">
+        <div class="col-md-1">
           <a href="/dashboard" class="btn btn-secondary w-100">Limpar</a>
+        </div>
+
+        <!-- BOTÃO PDF -->
+        <div class="col-md-1">
+          <a 
+            href="/relatorio?data_inicio={{ request.args.get('data_inicio', '') }}
+            &data_fim={{ request.args.get('data_fim', '') }}
+            &status={{ request.args.get('status', '') }}"
+            class="btn btn-dark w-100"
+            title="Gerar PDF"
+          >
+            PDF
+          </a>
         </div>
 
       </form>
@@ -72,6 +103,7 @@
 
   </div>
 
+  <!-- FORM ADD -->
   <div class="card shadow mb-4">
     <div class="card-body">
       <form method="POST" action="/add" class="row g-3">
@@ -90,9 +122,11 @@
             <option value="D">Despesa</option>
           </select>
         </div>
+
         <div class="col-md-2">
           <input type="date" name="data" class="form-control">
         </div>
+
         <div class="col-md-1 d-flex align-items-center">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" name="status" checked>
@@ -108,6 +142,7 @@
     </div>
   </div>
 
+  <!-- TABELA -->
   <div class="card shadow">
     <div class="card-body">
 
@@ -139,9 +174,11 @@
                 <span class="badge bg-danger">Despesa</span>
               {% endif %}
             </td>
+
             <td>
               {{ l.data.strftime('%d/%m/%Y') if l.data else '-' }}
             </td>
+
             <td>
               {% if l.status %}
                 <span class="badge bg-success">Efetuado</span>

@@ -1,7 +1,7 @@
 # Teste para a função de cálculo de saldo
 def test_calculo_saldo():
-    from services import calcular_totais
-    from models import Lancamento
+    from app.services.services import calcular_totais
+    from app.models import Lancamento
 
     lancamentos = [
         Lancamento(valor=100, tipo="R", status=True),

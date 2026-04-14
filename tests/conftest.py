@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pytest
 from app import create_app
-from models import db, Usuario
+from app.models import db, Usuario
 
 
 # ==============================
@@ -23,7 +23,7 @@ def client():
     with app.app_context():
         db.create_all()
 
-        user = Usuario(nome="Admin", login="admin", senha="123")
+        user = Usuario(nome="Admin", login="admin", senha="123", email="juliocesarschneider003@gmail.com")
         db.session.add(user)
         db.session.commit()
 

@@ -1,6 +1,6 @@
 # Teste para deletar um lançamento
 def test_deletar_lancamento(client):
-    from models import db, Lancamento
+    from app.models import db, Lancamento
 
     with client.application.app_context():
         lanc = Lancamento(descricao="Teste", valor=10, tipo="R", usuario_id=1)
