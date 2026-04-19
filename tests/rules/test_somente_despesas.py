@@ -1,6 +1,6 @@
 # Teste para verificar se o cálculo de despesas está correto quando há apenas despesas.
 def test_somente_despesas():
-    from app import calcular_totais
+    from app.services.services import calcular_totais
     from app.models import Lancamento
 
     lancamentos = [

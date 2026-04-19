@@ -1,6 +1,6 @@
 # Teste para verificar se o saldo negativo é calculado corretamente
 def test_saldo_negativo():
-    from app import calcular_totais
+    from app.services.services import calcular_totais
     from app.models import Lancamento
 
     lancamentos = [
