@@ -1,7 +1,7 @@
 from flask import Flask
 from app.models import db
 import config
-from app.services.services import calcular_totais
+
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -14,6 +14,7 @@ def create_app(test_config=None):
     db.init_app(app)
 
     from app.routes import init_routes
+
     init_routes(app)
 
     return app

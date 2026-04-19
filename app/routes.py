@@ -5,22 +5,21 @@ from app.services.services import (
     atualizar_lancamento,
     calcular_totais,
     criar_lancamento,
-    filtrar_lancamentos
+    filtrar_lancamentos,
 )
 from app.services.servicesRelatorio import gerar_pdf_lancamentos
 
 
 def init_routes(app):
 
-    #------------------------------
+    # ------------------------------
     # Rotas da aplicação
-    #------------------------------
+    # ------------------------------
     @app.route("/", methods=["GET", "POST"])
     def login():
         if request.method == "POST":
             user = Usuario.query.filter_by(
-                login=request.form["login"],
-                senha=request.form["senha"]
+                login=request.form["login"], senha=request.form["senha"]
             ).first()
 
             if user:
@@ -28,7 +27,6 @@ def init_routes(app):
                 return redirect("/dashboard")
 
         return render_template("login.html")
-
 
     @app.route("/dashboard")
     def dashboard():
@@ -40,10 +38,7 @@ def init_routes(app):
         status = request.args.get("status")
 
         lancamentos = filtrar_lancamentos(
-            session["user_id"],
-            data_inicio,
-            data_fim,
-            status
+            session["user_id"], data_inicio, data_fim, status
         )
 
         total_receitas, total_despesas, saldo = calcular_totais(lancamentos)
@@ -53,9 +48,8 @@ def init_routes(app):
             lancamentos=lancamentos,
             total_receitas=total_receitas,
             total_despesas=total_despesas,
-            saldo=saldo
+            saldo=saldo,
         )
-
 
     @app.route("/add", methods=["POST"])
     def add():
@@ -74,7 +68,7 @@ def init_routes(app):
                 enviar_email(
                     user.email,
                     "Novo lançamento criado",
-                    f"Lançamento '{novo.descricao}' no valor de R$ {novo.valor} foi criado."
+                    f"Lançamento '{novo.descricao}' no valor de R$ {novo.valor} foi criado.",
                 )
 
         except Exception as e:
@@ -82,7 +76,6 @@ def init_routes(app):
             print(f"Erro ao criar lançamento: {e}")
 
         return redirect("/dashboard")
-
 
     @app.route("/delete/<int:id>")
     def delete(id):
@@ -93,7 +86,6 @@ def init_routes(app):
             db.session.commit()
 
         return redirect("/dashboard")
-
 
     @app.route("/edit/<int:id>", methods=["GET", "POST"])
     def edit(id):
@@ -116,7 +108,7 @@ def init_routes(app):
                     enviar_email(
                         user.email,
                         "Lançamento atualizado",
-                        f"Lançamento '{lanc.descricao}' foi atualizado com sucesso."
+                        f"Lançamento '{lanc.descricao}' foi atualizado com sucesso.",
                     )
 
             except Exception as e:
@@ -126,7 +118,6 @@ def init_routes(app):
             return redirect("/dashboard")
 
         return render_template("edit.html", lanc=lanc)
-
 
     @app.route("/relatorio")
     def relatorio():
@@ -138,24 +129,16 @@ def init_routes(app):
         status = request.args.get("status")
 
         lancamentos = filtrar_lancamentos(
-            session["user_id"],
-            data_inicio,
-            data_fim,
-            status
+            session["user_id"], data_inicio, data_fim, status
         )
 
         total_receitas, total_despesas, saldo = calcular_totais(lancamentos)
 
-        pdf = gerar_pdf_lancamentos(
-            lancamentos,
-            total_receitas,
-            total_despesas,
-            saldo
-        )
+        pdf = gerar_pdf_lancamentos(lancamentos, total_receitas, total_despesas, saldo)
 
         return send_file(
             pdf,
             as_attachment=True,
             download_name="relatorio.pdf",
-            mimetype="application/pdf"
+            mimetype="application/pdf",
         )

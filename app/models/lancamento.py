@@ -1,5 +1,6 @@
 from app.models import db
 
+
 # Tabela de lançamentos
 class Lancamento(db.Model):
     __tablename__ = "lancamentos"

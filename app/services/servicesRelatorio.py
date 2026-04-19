@@ -22,31 +22,32 @@ def gerar_pdf_lancamentos(lancamentos, total_receitas=0, total_despesas=0, saldo
     # ==============================
     # TABELA DE DADOS
     # ==============================
-    data = [
-        ["Descrição", "Valor", "Tipo", "Data", "Status"]
-    ]
+    data = [["Descrição", "Valor", "Tipo", "Data", "Status"]]
 
-    for l in lancamentos:
-        data.append([
-            l.descricao,
-            f"R$ {float(l.valor):.2f}",
-            "Receita" if l.tipo == "R" else "Despesa",
-            l.data.strftime("%d/%m/%Y") if l.data else "-",
-            "Efetuado" if l.status else "Pendente"
-        ])
+    for lanc in lancamentos:
+        data.append(
+            [
+                lanc.descricao,
+                f"R$ {float(lanc.valor):.2f}",
+                "Receita" if lanc.tipo == "R" else "Despesa",
+                lanc.data.strftime("%d/%m/%Y") if lanc.data else "-",
+                "Efetuado" if lanc.status else "Pendente",
+            ]
+        )
 
     tabela = Table(data, repeatRows=1)
 
-    tabela.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-
-        ("GRID", (0, 0), (-1, -1), 1, colors.black),
-
-        ("ALIGN", (1, 1), (-1, -1), "CENTER"),
-
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    ]))
+    tabela.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ]
+        )
+    )
 
     elements.append(tabela)
     elements.append(Spacer(1, 20))
@@ -62,11 +63,15 @@ def gerar_pdf_lancamentos(lancamentos, total_receitas=0, total_despesas=0, saldo
 
     tabela_resumo = Table(resumo, colWidths=[200, 150])
 
-    tabela_resumo.setStyle(TableStyle([
-        ("GRID", (0, 0), (-1, -1), 1, colors.black),
-        ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
-        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
-    ]))
+    tabela_resumo.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
+                ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+            ]
+        )
+    )
 
     elements.append(Paragraph("Resumo", styles["Heading2"]))
     elements.append(Spacer(1, 10))

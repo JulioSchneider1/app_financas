@@ -6,6 +6,7 @@ from sqlalchemy import func
 # HELPERS
 # ==============================
 
+
 def parse_data(data):
     if not data:
         return None
@@ -22,7 +23,7 @@ def parse_data(data):
             return None
         try:
             return datetime.strptime(data, "%Y-%m-%d").date()
-        except:
+        except ValueError:
             return None
 
     return None
@@ -45,6 +46,7 @@ def parse_status(status):
 # ==============================
 # FUNÇÕES DE NEGÓCIO
 # ==============================
+
 
 def filtrar_lancamentos(user_id, data_inicio=None, data_fim=None, status=None):
     query = Lancamento.query.filter_by(usuario_id=user_id)
@@ -77,12 +79,12 @@ def calcular_totais(lancamentos):
     total_receitas = 0
     total_despesas = 0
 
-    for l in lancamentos:
-        if l.status:  # só considera efetuados
-            if l.tipo == "R":
-                total_receitas += l.valor
+    for lanc in lancamentos:
+        if lanc.status:  # só considera efetuados
+            if lanc.tipo == "R":
+                total_receitas += lanc.valor
             else:
-                total_despesas += l.valor
+                total_despesas += lanc.valor
 
     saldo = total_receitas - total_despesas
 
@@ -99,7 +101,7 @@ def criar_lancamento(form, user_id):
         tipo=form["tipo"],
         usuario_id=user_id,
         data=data if data else datetime.today(),
-        status=status if status is not None else False
+        status=status if status is not None else False,
     )
 
 

@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
-import os
 from flask import current_app
+
 
 def enviar_email(destinatario, assunto, mensagem):
     remetente = current_app.config["EMAIL_USER"]
