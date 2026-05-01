@@ -25,6 +25,6 @@ jobs:
           git fetch origin
 
           git checkout -b homolog origin/homolog || git checkout homolog
-          git merge origin/master --no-edit -X theirs
+          git merge origin/master --no-edit --allow-unrelated-histories -X theirs 
 
           git push origin homolog
