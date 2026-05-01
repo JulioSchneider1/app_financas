@@ -12,3 +12,6 @@ __pycache__/config.cpython-313.pyc
 
 # IDE
 .vscode/
+
+# Pre-commit
+.pre-commit-config.yaml
