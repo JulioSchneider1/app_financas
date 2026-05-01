@@ -1,11 +1,11 @@
 [flake8]
-# Setar o 
+# Setar o número máximo de caracteres por linha 
 max-line-length = 100
 
-# Ignore specific error codes (e.g., E203 for compatibility with Black)
+# Ignorar erros específicos 
 extend-ignore = E203, W503
 
-# Exclude specific directories or files from linting
+# Excluir arquivos e diretórios específicos da análise
 exclude = 
     .git,
     __pycache__,
@@ -14,10 +14,10 @@ exclude =
     venv
     __init__.py
 
-# Set McCabe complexity threshold
+# Setar o número máximo de complexidade para o código
 max-complexity = 25
 
-# Disable specific errors for certain files
+# Desabilitar erros específicos para arquivos ou diretórios específicos
 per-file-ignores =
     __init__.py: F401
     tests/*.py: S101
