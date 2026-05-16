@@ -9,12 +9,12 @@ jobs:
 
     steps:
       - name: Test SSH Connection
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          port: 22
+          port: 2222
           script: |
             echo "Conectado com sucesso!"
             whoami
