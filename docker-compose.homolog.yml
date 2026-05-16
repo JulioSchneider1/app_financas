@@ -1,0 +1,40 @@
+services:
+
+postgres:
+image: postgres:16
+
+container_name: postgres_homolog
+
+environment:
+  POSTGRES_DB: financeiro
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+
+ports:
+  - "5433:5432"
+
+volumes:
+  - postgres_homolog_data:/var/lib/postgresql/data
+
+flask_app:
+build: .
+
+container_name: app_financas_homolog
+
+depends_on:
+  - postgres
+
+environment:
+  DB_HOST: postgres
+  DB_NAME: financeiro
+  DB_USER: postgres
+  DB_PASSWORD: postgres
+  DB_PORT: 5432
+
+ports:
+  - "9001:9000"
+
+restart: always
+
+volumes:
+postgres_homolog_data:
