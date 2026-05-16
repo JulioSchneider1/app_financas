@@ -9,6 +9,17 @@ jobs:
 
 
     steps:
+      - name: Validar secrets
+        run: |
+          echo "HOST OK"
+          echo "${{ secrets.VM_HOST }}"
+
+          echo "PORT OK"
+          echo "${{ secrets.VM_PORT }}"
+
+          echo "USER OK"
+          echo "${{ secrets.VM_USER }}"
+
       - name: Configurar chave SSH
         run: |
           mkdir -p ~/.ssh
@@ -19,11 +30,18 @@ jobs:
 
           chmod 600 ~/.ssh/id_rsa
 
+      - name: Testar keyscan
+        run: |
+          ssh-keyscan -H -p ${{ secrets.VM_PORT }} ${{ secrets.VM_HOST }}
+
+      - name: Adicionar known_hosts
+        run: |
           ssh-keyscan -H -p ${{ secrets.VM_PORT }} ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
 
       - name: Testar conexão SSH
         run: |
-          ssh -i ~/.ssh/id_rsa \
+          ssh -o StrictHostKeyChecking=no \
+            -i ~/.ssh/id_rsa \
             -p ${{ secrets.VM_PORT }} \
             ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
 
