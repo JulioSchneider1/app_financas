@@ -8,26 +8,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Configurar chave SSH
-        run: |
-          mkdir -p ~/.ssh
-
-          cat << 'EOF' > ~/.ssh/id_rsa
-          ${{ secrets.VM_SSH_KEY }}
-          EOF
-
-          chmod 600 ~/.ssh/id_rsa
-
-      - name: Testar conexão SSH
-        run: |
-          ssh -o StrictHostKeyChecking=no \
-            -i ~/.ssh/id_rsa \
-            -p 22 \
-            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
-
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          script: |
             echo "Conectado com sucesso!"
             whoami
             hostname
             pwd
-
-          EOF
