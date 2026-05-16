@@ -12,8 +12,13 @@ jobs:
       - name: Configurar chave SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
+
+          cat << 'EOF' > ~/.ssh/id_rsa
+          ${{ secrets.VM_SSH_KEY }}
+          EOF
+
           chmod 600 ~/.ssh/id_rsa
+
           ssh-keyscan -H -p ${{ secrets.VM_PORT }} ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
 
       - name: Testar conexão SSH
