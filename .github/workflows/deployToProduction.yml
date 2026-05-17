@@ -1,0 +1,75 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@master
+
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT }}
+
+          script: |
+
+            echo "Atualizando pacotes..."
+            sudo apt-get update -y
+
+            echo "Verificando Git..."
+            if ! command -v git &> /dev/null
+            then
+              sudo apt-get install git -y
+            fi
+
+            echo "Verificando Docker..."
+            if ! command -v docker &> /dev/null
+            then
+              sudo apt-get install docker.io -y
+              sudo systemctl enable docker
+              sudo systemctl start docker
+            fi
+
+            echo "Criando diretório..."
+            sudo mkdir -p /opt/projeto_production
+
+            sudo chown -R $USER:$USER /opt/projeto_production
+
+            cd /opt/projeto_production
+
+            echo "Clonando projeto..."
+            if [ ! -d ".git" ]; then
+              git clone -b production https://github.com/JulioSchneider1/app_financas .
+            else
+              git reset --hard
+              git clean -fd
+              git checkout production
+              git pull origin production
+            fi
+
+            echo "Criando .env..."
+
+            cat > .env <<EOF
+            EMAIL_USER=${{ secrets.EMAIL_USER }}
+            EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_HOST=postgres
+            DB_PORT=5432
+            DB_NAME=${{ secrets.DB_NAME }}
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            EOF
+
+            echo "Parando containers..."
+            sudo docker-compose -f docker-compose.production.yml down
+
+            echo "Subindo containers..."
+            sudo docker-compose -f docker-compose.production.yml up --build -d
+
+            echo "Deploy finalizado!"
