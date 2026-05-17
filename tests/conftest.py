@@ -1,11 +1,10 @@
 import sys
 import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import pytest
 from app import create_app
 from app.models import db, Usuario
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 # ==============================
@@ -13,17 +12,24 @@ from app.models import db, Usuario
 # ==============================
 @pytest.fixture
 def client():
-    app = create_app({
-        "TESTING": True,
-        "SECRET_KEY": "test",
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "SQLALCHEMY_TRACK_MODIFICATIONS": False
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "SECRET_KEY": "test",
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        }
+    )
 
     with app.app_context():
         db.create_all()
 
-        user = Usuario(nome="Admin", login="admin", senha="123", email="juliocesarschneider003@gmail.com")
+        user = Usuario(
+            nome="Admin",
+            login="admin",
+            senha="123",
+            email="juliocesarschneider003@gmail.com",
+        )
         db.session.add(user)
         db.session.commit()
 
@@ -39,12 +45,14 @@ def client():
 # ==============================
 @pytest.fixture
 def app_context():
-    app = create_app({
-        "TESTING": True,
-        "SECRET_KEY": "test",
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "SQLALCHEMY_TRACK_MODIFICATIONS": False
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "SECRET_KEY": "test",
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        }
+    )
 
     with app.app_context():
         db.create_all()

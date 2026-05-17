@@ -11,8 +11,9 @@ exclude =
     __pycache__,
     build,
     dist,
-    venv
-    __init__.py
+    venv,
+    __init__.py,
+    migrations
 
 # Setar o número máximo de complexidade para o código
 max-complexity = 25
