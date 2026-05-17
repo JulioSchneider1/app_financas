@@ -73,7 +73,7 @@ jobs:
             EOF
 
             echo "Parando containers..."
-            sudo docker-compose -f docker-compose.homolog.yml down -v
+            sudo docker-compose -f docker-compose.homolog.yml down
 
             echo "Subindo containers..."
             sudo docker-compose -f docker-compose.homolog.yml up --build -d
