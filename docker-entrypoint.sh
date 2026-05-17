@@ -9,9 +9,24 @@ done
 
 echo "PostgreSQL disponível!"
 
-echo "Executando defaultDatabase.sql..."
+TABLE_EXISTS=$(PGPASSWORD=postgres psql -h postgres -U postgres -d financeiro -tAc "
+SELECT EXISTS (
+    SELECT FROM information_schema.tables
+    WHERE table_name = 'usuarios'
+);
+")
 
-PGPASSWORD=postgres psql -h postgres -U postgres -d financeiro -f /app/app/schema/defaultDatabase.sql
+if [ "$TABLE_EXISTS" = "f" ]; then
+    echo "Banco vazio. Executando defaultDatabase.sql..."
+
+    PGPASSWORD=postgres psql \
+        -h postgres \
+        -U postgres \
+        -d financeiro \
+        -f /app/app/schema/defaultDatabase.sql
+else
+    echo "Banco já inicializado. Pulando Default script SQL."
+fi
 
 echo "Inicializando aplicação Flask..."
 
