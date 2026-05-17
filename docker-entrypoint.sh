@@ -18,6 +18,10 @@ echo "Executando migrations..."
 
 flask --app app.py db upgrade
 
+echo "Populando banco de dados com dados iniciais..."
+
+python seed.py
+
 echo "Inicializando aplicação Flask..."
 
 python app.py
