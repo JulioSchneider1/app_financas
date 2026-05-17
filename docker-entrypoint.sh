@@ -11,7 +11,7 @@ echo "PostgreSQL disponível!"
 
 echo "Executando defaultDatabase.sql..."
 
-PGPASSWORD=postgres psql -h postgres -U postgres -d financeiro -f /app/schema/defaultDatabase.sql
+PGPASSWORD=postgres psql -h postgres -U postgres -d financeiro -f /app/app/schema/defaultDatabase.sql
 
 echo "Inicializando aplicação Flask..."
 

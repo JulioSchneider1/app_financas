@@ -10,6 +10,7 @@ jobs:
     steps:
       - name: Deploy to Homolog
         uses: appleboy/ssh-action@master
+
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
@@ -17,74 +18,64 @@ jobs:
           port: ${{ secrets.VM_PORT }}
 
           script: |
-            set -e
 
             echo "Atualizando pacotes..."
-
             sudo apt-get update -y
 
             echo "Verificando Git..."
-
             if ! command -v git &> /dev/null
             then
-              echo "Git não encontrado. Instalando..."
-              sudo apt-get install -y git
+              sudo apt-get install git -y
             fi
 
             echo "Verificando Docker..."
-
             if ! command -v docker &> /dev/null
             then
-              echo "Docker não encontrado. Instalando..."
-              sudo apt-get install -y docker.io
+              sudo apt-get install docker.io -y
               sudo systemctl enable docker
               sudo systemctl start docker
             fi
 
             echo "Verificando Docker Compose..."
-
-            if ! command -v docker-compose &> /dev/null
+            if ! docker compose version &> /dev/null
             then
-              echo "Docker Compose não encontrado. Instalando..."
-              sudo apt-get install -y docker-compose
+              sudo apt-get install docker-compose-plugin -y
             fi
 
-            echo "Criando diretório do projeto..."
-
+            echo "Criando diretório..."
             sudo mkdir -p /opt/projeto_homolog
 
             sudo chown -R $USER:$USER /opt/projeto_homolog
 
-            echo "Clonando ou atualizando repositório..."
-
-            if [ ! -d "/opt/projeto_homolog/.git" ]; then
-
-              git clone -b homolog https://github.com/JulioSchneider1/app_financas.git /opt/projeto_homolog
-
-            else
-
-              cd /opt/projeto_homolog
-
-              git fetch origin
-
-              git checkout homolog
-
-              git pull origin homolog
-
-            fi
-
             cd /opt/projeto_homolog
 
-            echo "Parando containers antigos..."
+            echo "Clonando projeto..."
+            if [ ! -d ".git" ]; then
+              git clone -b homolog https://github.com/JulioSchneider1/app_financas .
+            else
+              git reset --hard
+              git clean -fd
+              git checkout homolog
+              git pull origin homolog
+            fi
 
-            docker-compose -f docker-compose.homolog.yml down || true
+            echo "Criando .env..."
 
-            echo "Subindo ambiente homolog..."
+            cat > .env <<EOF
+            EMAIL_USER=${{ secrets.EMAIL_USER }}
+            EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_HOST=postgres
+            DB_PORT=5432
+            DB_NAME=${{ secrets.DB_NAME }}
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            EOF
 
-            docker-compose -f docker-compose.homolog.yml up --build -d
+            echo "Parando containers..."
+            sudo docker compose -f docker-compose.homolog.yml down -v
 
-            echo "Containers ativos:"
+            echo "Subindo containers..."
+            sudo docker compose -f docker-compose.homolog.yml up --build -d
 
-            docker ps
-
-            echo "Deploy finalizado com sucesso!"
+            echo "Deploy finalizado!"
