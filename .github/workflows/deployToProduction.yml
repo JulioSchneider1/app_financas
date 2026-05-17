@@ -67,9 +67,9 @@ jobs:
             EOF
 
             echo "Parando containers..."
-            sudo docker compose -f docker-compose.production.yml down
+            sudo docker-compose -f docker-compose.production.yml down
 
             echo "Subindo containers..."
-            sudo docker compose -f docker-compose.production.yml up --build -d
+            sudo docker-compose -f docker-compose.production.yml up --build -d
 
             echo "Deploy finalizado!"
