@@ -17,6 +17,8 @@ jobs:
           port: ${{ secrets.VM_PORT }}
 
           script: |
+            set -e
+
             echo "Atualizando pacotes..."
 
             sudo apt-get update -y
