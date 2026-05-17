@@ -21,4 +21,5 @@ max-complexity = 25
 # Desabilitar erros específicos para arquivos ou diretórios específicos
 per-file-ignores =
     __init__.py: F401
-    tests/*.py: S101
+    tests/conftest.py:E402
+    tests/*.py:S101
