@@ -23,7 +23,7 @@ services:
       DB_PASSWORD: postgres
       DB_PORT: 5432
     ports:
-      - "9001:5000"
+      - "5001:5000"
     restart: always
 
 volumes:
