@@ -32,7 +32,7 @@ environment:
   DB_PORT: 5432
 
 ports:
-  - "9001:9000"
+  - "9001:5000"
 
 restart: always
 
