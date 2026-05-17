@@ -22,7 +22,7 @@ CONSTRAINT fk_usuario
 );
 
 INSERT INTO usuarios (nome, login, senha, email)
-SELECT 'Admin', 'admin', '123', 'julioschneider1@universo.univates.br'
+SELECT 'Admin', 'admin', '123', 'julio.schneider1@universo.univates.br'
 WHERE NOT EXISTS (
 SELECT 1
 FROM usuarios
