@@ -1,0 +1,26 @@
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Merge homolog → production
+        run: |
+          git config user.name "github-actions" 
+          git config user.email "actions@github.com" 
+          
+          git fetch origin 
+          
+          git checkout -b production origin/production || git checkout production 
+          git merge origin/homolog --no-edit --allow-unrelated-histories -X theirs 
+          
+          git push origin production
