@@ -11,10 +11,8 @@ def test_editar_lancamento(client):
     with client.session_transaction() as sess:
         sess["user_id"] = 1
 
-    response = client.post(f"/edit/{lanc_id}", data={
-        "descricao": "Editado",
-        "valor": 20,
-        "tipo": "D"
-    })
+    response = client.post(
+        f"/edit/{lanc_id}", data={"descricao": "Editado", "valor": 20, "tipo": "D"}
+    )
 
     assert response.status_code == 302

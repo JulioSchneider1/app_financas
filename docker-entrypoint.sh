@@ -2,31 +2,21 @@
 
 echo "Aguardando PostgreSQL ficar disponível..."
 
-until PGPASSWORD=postgres psql -h postgres -U postgres -d financeiro -c '\q'; do
+until PGPASSWORD=$DB_PASSWORD psql \
+    -h $DB_HOST \
+    -U $DB_USER \
+    -d $DB_NAME \
+    -c '\q'; do
+
     echo "PostgreSQL ainda não disponível..."
     sleep 2
 done
 
 echo "PostgreSQL disponível!"
 
-TABLE_EXISTS=$(PGPASSWORD=postgres psql -h postgres -U postgres -d financeiro -tAc "
-SELECT EXISTS (
-    SELECT FROM information_schema.tables
-    WHERE table_name = 'usuarios'
-);
-")
+echo "Executando migrations..."
 
-if [ "$TABLE_EXISTS" = "f" ]; then
-    echo "Banco vazio. Executando defaultDatabase.sql..."
-
-    PGPASSWORD=postgres psql \
-        -h postgres \
-        -U postgres \
-        -d financeiro \
-        -f /app/app/schema/defaultDatabase.sql
-else
-    echo "Banco já inicializado. Pulando Default script SQL."
-fi
+flask --app app.py db upgrade
 
 echo "Inicializando aplicação Flask..."
 
