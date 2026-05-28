@@ -39,7 +39,7 @@ jobs:
             echo "Verificando Docker Compose..."
             if ! docker-compose version &> /dev/null
             then
-              sudo apt-get install docker-compose-plugin -y
+              sudo apt-get install docker-compose-v2 -y
             fi
 
             echo "Criando diretório..."
@@ -73,9 +73,9 @@ jobs:
             EOF
 
             echo "Parando containers..."
-            sudo docker-compose -f docker-compose.homolog.yml down
+            sudo docker compose -f docker-compose.homolog.yml down
 
             echo "Subindo containers..."
-            sudo docker-compose -f docker-compose.homolog.yml up --build -d
+            sudo docker compose -f docker-compose.homolog.yml up --build -d
 
             echo "Deploy finalizado!"
