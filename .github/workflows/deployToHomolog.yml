@@ -19,63 +19,67 @@ jobs:
 
           script: |
 
-            echo "Atualizando pacotes..."
-            sudo apt-get update -y
-
-            echo "Verificando Git..."
-            if ! command -v git &> /dev/null
-            then
-              sudo apt-get install git -y
+            echo "1. Verificando/Instalando Docker na VM..."
+            if ! command -v docker &> /dev/null; then
+              sudo apt-get update -y && sudo apt-get install docker.io -y
+              sudo systemctl enable docker && sudo systemctl start docker
             fi
 
-            echo "Verificando Docker..."
-            if ! command -v docker &> /dev/null
-            then
-              sudo apt-get install docker.io -y
-              sudo systemctl enable docker
-              sudo systemctl start docker
-            fi
+            echo "2. Criando rede Docker para o Homolog..."
+            sudo docker network create homolog_network || true
 
-            echo "Verificando Docker Compose..."
-            if ! docker-compose version &> /dev/null
-            then
-              sudo apt-get install docker-compose-v2 -y
-            fi
+            echo "3. Criando e iniciando o Container PostgreSQL para Homolog..."
 
-            echo "Criando diretório..."
-            sudo mkdir -p /opt/projeto_homolog
+            sudo docker run -d \
+              --name postgres_homolog \
+              --network homolog_network \
+              -e POSTGRES_DB=financeiro \
+              -e POSTGRES_USER=postgres \
+              -e POSTGRES_PASSWORD=postgres \
+              -p 5433:5432 \
+              postgres:16 || true
 
-            sudo chown -R $USER:$USER /opt/projeto_homolog
+            echo "4. Criando e configurando o Container para a aplicação Homolog..."
 
-            cd /opt/projeto_homolog
+            sudo docker rm -f app_financas_homolog || true
 
-            echo "Clonando projeto..."
-            if [ ! -d ".git" ]; then
-              git clone -b homolog https://github.com/JulioSchneider1/app_financas .
-            else
-              git reset --hard
-              git clean -fd
-              git checkout homolog
-              git pull origin homolog
-            fi
+            sudo docker run -d -t \
+              --name app_financas_homolog \
+              --network homolog_network \
+              -p 5001:5000 \
+              ubuntu:22.04
 
-            echo "Criando .env..."
+            echo "5. Atualizando o Container da aplicação e instalando dependências básicas (git, python3, pip, venv)..."
+            sudo docker exec app_financas_homolog apt-get update -y
+            sudo docker exec app_financas_homolog apt-get install -y git python3 python3-pip python3-venv postgresql-client
 
-            cat > .env <<EOF
+            echo "6. Clonando o repositório da aplicação dentro do Container..."
+            sudo docker exec app_financas_homolog mkdir -p /opt/projeto_homolog
+            sudo docker exec app_financas_homolog git clone -b homolog https://github.com/JulioSchneider1/app_financas /opt/projeto_homolog
+
+            echo "7. Criando o arquivo .env dentro do Container com as variáveis de ambiente necessárias..."
+
+            sudo docker exec -i app_financas_homolog sh -c "cat > /opt/projeto_homolog/.env" <<EOF
             EMAIL_USER=${{ secrets.EMAIL_USER }}
             EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_HOST=postgres
+            DB_HOST=postgres_homolog
             DB_PORT=5432
             DB_NAME=${{ secrets.DB_NAME }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
             EOF
 
-            echo "Parando containers..."
-            sudo docker compose -f docker-compose.homolog.yml down
+            echo "8. Instalando dependências do projeto dentro do Container..."
 
-            echo "Subindo containers..."
-            sudo docker compose -f docker-compose.homolog.yml up --build -d
+            sudo docker exec app_financas_homolog apt-get install -y postgresql-client
+            sudo docker exec app_financas_homolog pip3 install -r /opt/projeto_homolog/requirements.txt
 
-            echo "Deploy finalizado!"
+            echo "9. Garantindo que o docker-entrypoint.sh tenha permissão de execução dentro do Container..."
+            sudo docker exec app_financas_homolog chmod +x /opt/projeto_homolog/docker-entrypoint.sh
+
+            echo "10. Iniciando a aplicação dentro do Container usando o docker-entrypoint.sh..."
+
+            sudo docker exec -d -w /opt/projeto_homolog app_financas_homolog sh -c "nohup ./docker-entrypoint.sh > flask.log 2>&1 &"
+
+            echo "Deploy finalizado com sucesso!"
