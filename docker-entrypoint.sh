@@ -30,7 +30,7 @@ echo "Executando migrations..."
 flask --app app.py db upgrade
 
 echo "Populando banco de dados com dados iniciais..."
-python seed.py || echo "Aviso: seed.py falhou ou os dados já existem. Pulando..."
+python3 seed.py || echo "Aviso: seed.py falhou ou os dados já existem. Pulando..."
 
 echo "Inicializando aplicação Flask..."
-exec python app.py
+exec python3 app.py
