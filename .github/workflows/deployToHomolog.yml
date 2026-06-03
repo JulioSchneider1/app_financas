@@ -28,7 +28,8 @@ jobs:
             echo "2. Criando rede Docker para o Homolog..."
             sudo docker network create homolog_network || true
 
-            echo "3. Criando e iniciando o Container PostgreSQL para Homolog..."
+            echo "3. Removendo container antigo e iniciando o Novo PostgreSQL para Homolog..."
+            sudo docker rm -f postgres_homolog || true
 
             sudo docker run -d \
               --name postgres_homolog \
@@ -37,7 +38,7 @@ jobs:
               -e POSTGRES_USER=postgres \
               -e POSTGRES_PASSWORD=postgres \
               -p 5433:5432 \
-              postgres:16 || true
+              postgres:16
 
             echo "4. Criando e configurando o Container para a aplicação Homolog..."
 
@@ -79,7 +80,6 @@ jobs:
             sudo docker exec app_financas_homolog chmod +x /opt/projeto_homolog/docker-entrypoint.sh
 
             echo "10. Iniciando a aplicação dentro do Container usando o docker-entrypoint.sh..."
-
-            sudo docker exec -d -w /opt/projeto_homolog app_financas_homolog sh -c "nohup ./docker-entrypoint.sh > flask.log 2>&1 &"
+            sudo docker exec -d -w /opt/projeto_homolog app_financas_homolog sh -c "cd /opt/projeto_homolog && nohup ./docker-entrypoint.sh > flask.log 2>&1 &"
 
             echo "Deploy finalizado com sucesso!"
