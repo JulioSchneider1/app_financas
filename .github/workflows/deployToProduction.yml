@@ -30,7 +30,8 @@ jobs:
             echo "3. Criando rede Docker para Produção..."
             sudo docker network create production_network || true
 
-            echo "4. Criando e iniciando o Container PostgreSQL para Produção..."
+            echo "4. Removendo container antigo e iniciando o Novo PostgreSQL para Produção..."
+            sudo docker rm -f postgres_production || true
 
             sudo docker run -d \
               --name postgres_production \
@@ -40,7 +41,7 @@ jobs:
               -e POSTGRES_PASSWORD=postgres \
               -p 5432:5432 \
               -v postgres_production_data:/var/lib/postgresql/data \
-              postgres:16 || true
+              postgres:16
 
             echo "5. Removendo Container de Produção antigo (se existir) para evitar conflitos..."
             sudo docker rm -f app_financas_production || true
@@ -62,7 +63,6 @@ jobs:
             sudo docker exec app_financas_production git clone -b production https://github.com/JulioSchneider1/app_financas /opt/projeto_production
 
             echo "9. Criando o arquivo .env dentro do Container com as variáveis de ambiente necessárias..."
-            # Apontando o DB_HOST para o container do banco de produção correspondente
             sudo docker exec -i app_financas_production sh -c "cat > /opt/projeto_production/.env" <<EOF
             EMAIL_USER=${{ secrets.EMAIL_USER }}
             EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
@@ -81,6 +81,6 @@ jobs:
             sudo docker exec app_financas_production chmod +x /opt/projeto_production/docker-entrypoint.sh
 
             echo "12. Iniciando a aplicação dentro do Container usando o docker-entrypoint.sh..."
-            sudo docker exec -d -w /opt/projeto_production app_financas_production sh -c "nohup ./docker-entrypoint.sh > flask.log 2>&1 &"
+            sudo docker exec -d -w /opt/projeto_production app_financas_production sh -c "cd /opt/projeto_production && nohup ./docker-entrypoint.sh > flask.log 2>&1 &"
 
             echo "Deploy de Produção finalizado com sucesso!"
