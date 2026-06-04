@@ -18,58 +18,69 @@ jobs:
           port: ${{ secrets.VM_PORT }}
 
           script: |
-
-            echo "Atualizando pacotes..."
+            echo "1. Atualizando pacotes na VM Hospedeira..."
             sudo apt-get update -y
 
-            echo "Verificando Git..."
-            if ! command -v git &> /dev/null
-            then
-              sudo apt-get install git -y
-            fi
-
-            echo "Verificando Docker..."
-            if ! command -v docker &> /dev/null
-            then
+            echo "2. Verificando/Instalando Docker na VM..."
+            if ! command -v docker &> /dev/null; then
               sudo apt-get install docker.io -y
-              sudo systemctl enable docker
-              sudo systemctl start docker
+              sudo systemctl enable docker && sudo systemctl start docker
             fi
 
-            echo "Criando diretório..."
-            sudo mkdir -p /opt/projeto_production
+            echo "3. Criando rede Docker para Produção..."
+            sudo docker network create production_network || true
 
-            sudo chown -R $USER:$USER /opt/projeto_production
+            echo "4. Removendo container antigo e iniciando o Novo PostgreSQL para Produção..."
+            sudo docker rm -f postgres_production || true
 
-            cd /opt/projeto_production
+            sudo docker run -d \
+              --name postgres_production \
+              --network production_network \
+              -e POSTGRES_DB=financeiro \
+              -e POSTGRES_USER=postgres \
+              -e POSTGRES_PASSWORD=postgres \
+              -p 5432:5432 \
+              -v postgres_production_data:/var/lib/postgresql/data \
+              postgres:16
 
-            echo "Clonando projeto..."
-            if [ ! -d ".git" ]; then
-              git clone -b production https://github.com/JulioSchneider1/app_financas .
-            else
-              git reset --hard
-              git clean -fd
-              git checkout production
-              git pull origin production
-            fi
+            echo "5. Removendo Container de Produção antigo (se existir) para evitar conflitos..."
+            sudo docker rm -f app_financas_production || true
 
-            echo "Criando .env..."
+            echo "6. Criando e configurando o Container para a aplicação de Produção..."
 
-            cat > .env <<EOF
+            sudo docker run -d -t \
+              --name app_financas_production \
+              --network production_network \
+              -p 5000:5000 \
+              ubuntu:22.04
+
+            echo "7. Atualizando o Container da aplicação e instalando dependências básicas (git, python3, pip, venv, postgresql-client)..."
+            sudo docker exec app_financas_production apt-get update -y
+            sudo docker exec app_financas_production apt-get install -y git python3 python3-pip python3-venv postgresql-client
+
+            echo "8. Clonando o repositório da aplicação dentro do Container..."
+            sudo docker exec app_financas_production mkdir -p /opt/projeto_production
+            sudo docker exec app_financas_production git clone -b production https://github.com/JulioSchneider1/app_financas /opt/projeto_production
+
+            echo "9. Criando o arquivo .env dentro do Container com as variáveis de ambiente necessárias..."
+            sudo docker exec -i app_financas_production sh -c "cat > /opt/projeto_production/.env" <<EOF
             EMAIL_USER=${{ secrets.EMAIL_USER }}
             EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_HOST=postgres
+            DB_HOST=postgres_production
             DB_PORT=5432
             DB_NAME=${{ secrets.DB_NAME }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
             EOF
 
-            echo "Parando containers..."
-            sudo docker-compose -f docker-compose.production.yml down
+            echo "10. Instalando as dependências Python dentro do Container usando o requirements.txt..."
+            sudo docker exec app_financas_production pip3 install -r /opt/projeto_production/requirements.txt
 
-            echo "Subindo containers..."
-            sudo docker-compose -f docker-compose.production.yml up --build -d
+            echo "11. Garantindo que o docker-entrypoint.sh tenha permissão de execução..."
+            sudo docker exec app_financas_production chmod +x /opt/projeto_production/docker-entrypoint.sh
 
-            echo "Deploy finalizado!"
+            echo "12. Iniciando a aplicação dentro do Container usando o docker-entrypoint.sh..."
+            sudo docker exec -d -w /opt/projeto_production app_financas_production sh -c "cd /opt/projeto_production && nohup ./docker-entrypoint.sh > flask.log 2>&1 &"
+
+            echo "Deploy de Produção finalizado com sucesso!"
