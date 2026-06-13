@@ -25,41 +25,45 @@ jobs:
               sudo systemctl enable docker && sudo systemctl start docker
             fi
 
-            echo "2. Criando rede Docker para o Homolog..."
+            echo "2. Criando rede Docker para o Homolog (se não existir)..."
             sudo docker network create homolog_network || true
 
-            echo "3. Removendo container antigo e iniciando o Novo PostgreSQL para Homolog..."
-            sudo docker rm -f postgres_homolog || true
+            echo "3. Verificando se o PostgreSQL já existe..."
+            if ! sudo docker ps -a --format '{{.Names}}' | grep -q '^postgres_homolog$'; then
+              echo "   -> Banco não encontrado, criando novo container PostgreSQL..."
+              sudo docker run -d \
+                --name postgres_homolog \
+                --network homolog_network \
+                -e POSTGRES_DB=financeiro \
+                -e POSTGRES_USER=postgres \
+                -e POSTGRES_PASSWORD=postgres \
+                -v postgres_homolog_data:/var/lib/postgresql/data \
+                -p 5433:5432 \
+                postgres:16
+            else
+              echo "   -> Banco já existe, mantendo dados e apenas garantindo que está rodando..."
+              sudo docker start postgres_homolog || true
+            fi
 
-            sudo docker run -d \
-              --name postgres_homolog \
-              --network homolog_network \
-              -e POSTGRES_DB=financeiro \
-              -e POSTGRES_USER=postgres \
-              -e POSTGRES_PASSWORD=postgres \
-              -p 5433:5432 \
-              postgres:16
-
-            echo "4. Criando e configurando o Container para a aplicação Homolog..."
-
+            echo "4. Removendo container antigo da aplicação (apenas a app, não o banco)..."
             sudo docker rm -f app_financas_homolog || true
 
+            echo "5. Criando novo container da aplicação..."
             sudo docker run -d -t \
               --name app_financas_homolog \
               --network homolog_network \
               -p 5001:5000 \
               ubuntu:22.04
 
-            echo "5. Atualizando o Container da aplicação e instalando dependências básicas (git, python3, pip, venv)..."
+            echo "6. Instalando dependências básicas (git, python3, pip, venv)..."
             sudo docker exec app_financas_homolog apt-get update -y
             sudo docker exec app_financas_homolog apt-get install -y git python3 python3-pip python3-venv postgresql-client
 
-            echo "6. Clonando o repositório da aplicação dentro do Container..."
+            echo "7. Clonando o repositório da aplicação dentro do Container..."
             sudo docker exec app_financas_homolog mkdir -p /opt/projeto_homolog
             sudo docker exec app_financas_homolog git clone -b homolog https://github.com/JulioSchneider1/app_financas /opt/projeto_homolog
 
-            echo "7. Criando o arquivo .env dentro do Container com as variáveis de ambiente necessárias..."
-
+            echo "8. Criando o arquivo .env dentro do Container..."
             sudo docker exec -i app_financas_homolog sh -c "cat > /opt/projeto_homolog/.env" <<EOF
             EMAIL_USER=${{ secrets.EMAIL_USER }}
             EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
@@ -71,15 +75,13 @@ jobs:
             SECRET_KEY=${{ secrets.SECRET_KEY }}
             EOF
 
-            echo "8. Instalando dependências do projeto dentro do Container..."
-
-            sudo docker exec app_financas_homolog apt-get install -y postgresql-client
+            echo "9. Instalando dependências do projeto..."
             sudo docker exec app_financas_homolog pip3 install -r /opt/projeto_homolog/requirements.txt
 
-            echo "9. Garantindo que o docker-entrypoint.sh tenha permissão de execução dentro do Container..."
+            echo "10. Garantindo permissão de execução no entrypoint..."
             sudo docker exec app_financas_homolog chmod +x /opt/projeto_homolog/docker-entrypoint.sh
 
-            echo "10. Iniciando a aplicação dentro do Container usando o docker-entrypoint.sh..."
+            echo "11. Iniciando a aplicação..."
             sudo docker exec -d -w /opt/projeto_homolog app_financas_homolog sh -c "cd /opt/projeto_homolog && nohup ./docker-entrypoint.sh > flask.log 2>&1 &"
 
             echo "Deploy finalizado com sucesso!"
