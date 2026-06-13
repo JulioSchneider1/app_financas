@@ -37,6 +37,7 @@ jobs:
                 -e POSTGRES_DB=financeiro \
                 -e POSTGRES_USER=postgres \
                 -e POSTGRES_PASSWORD=postgres \
+                -e POSTGRES_HOST_AUTH_METHOD=md5 \
                 -v postgres_homolog_data:/var/lib/postgresql/data \
                 -p 5433:5432 \
                 postgres:16
