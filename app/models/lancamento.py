@@ -1,5 +1,10 @@
 from app.models import db
 
+#Se tem um comentario muito grande, o Flake8 reclama, 
+# então vou colocar o comentário aqui em cima, 
+# para não dar erro de linha muito grande AAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
 # Tabela de lançamentos
 class Lancamento(db.Model):
