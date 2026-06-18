@@ -26,6 +26,9 @@ set -e
 
 echo "PostgreSQL disponível!"
 
+echo "Heads encontrados:"
+flask --app app.py db heads
+
 echo "Executando migrations..."
 flask --app app.py db upgrade
 
