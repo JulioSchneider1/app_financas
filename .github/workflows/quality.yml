@@ -22,3 +22,7 @@ jobs:
 
       - run: flake8 app
       - run: black --check app
+
+  tests:
+    needs: quality
+    uses: ./.github/workflows/tests.yml
