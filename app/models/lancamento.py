@@ -9,6 +9,6 @@ class Lancamento(db.Model):
     descricao = db.Column(db.String(200))
     valor = db.Column(db.Float)
     tipo = db.Column(db.String(1))
-    usuario_id = db.Column(db.Integer)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
     data = db.Column(db.Date)
     status = db.Column(db.Boolean, default=True)

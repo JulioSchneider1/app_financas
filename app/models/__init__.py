@@ -4,3 +4,4 @@ db = SQLAlchemy()
 
 from .usuario import Usuario
 from .lancamento import Lancamento
+from .tipo import Tipo
